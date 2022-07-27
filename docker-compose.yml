@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  mongodb:
+    image: mongo
+    container_name: posts_db
+    environment:
+      - MONGO_INITDB_DATABASE=upvote
+    volumes:
+      - "./db/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro"
+    restart: always
+    ports:
+      - 27017:27017
+    networks:
+      - upvote_net
+  server:
+    build: ./server
+    container_name: go_server
+    ports:
+      - 3001:3001
+    depends_on:
+      - mongodb
+    environment:
+      - PORT=3001
+      - HOST=localhost
+      - MONGO_URI=mongodb
+      - MONGO_PORT=27017
+    networks:
+      - upvote_net
+  
+
+networks:
+  upvote_net:
+    driver: 'bridge'
