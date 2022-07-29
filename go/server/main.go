@@ -26,7 +26,7 @@ type Post struct {
 	Id     primitive.ObjectID `bson:"_id,omitempty"`
 	Title  string             `bson:"title"`
 	Desc   string             `bson:"desc"`
-	Votes  int64              `bson:"votes"`
+	Votes  int64              `bson:"votes,omitempty"`
 	Author string             `bson:"author"`
 }
 
@@ -87,7 +87,11 @@ func (s *Server) Vote(_ context.Context, req *pb.VoteRequest) (*pb.PostDB, error
 		return nil, status.Errorf(codes.InvalidArgument, "Fail to convert hex to OID: %v", err)
 	}
 
-	res := postColl.FindOneAndUpdate(context.Background(), bson.M{"_id": id}, bson.M{"$inc": bson.M{"votes": 1}}, options.FindOneAndUpdate().SetReturnDocument(1))
+	res := postColl.FindOneAndUpdate(
+		context.Background(),
+		bson.M{"_id": id},
+		bson.M{"$inc": bson.M{"votes": 1}},
+		options.FindOneAndUpdate().SetReturnDocument(1))
 	if err := res.Decode(data); err != nil {
 		return nil, status.Errorf(codes.NotFound, "Post not found: %v", err)
 	}
@@ -120,6 +124,36 @@ func (s *Server) CreatePost(_ context.Context, req *pb.Post) (*pb.PostDB, error)
 		Title:  data.Title,
 		Desc:   data.Desc,
 		Votes:  data.Votes,
+		Author: data.Author,
+	}, nil
+}
+
+func (s *Server) UpdatePost(_ context.Context, req *pb.PostDB) (*pb.PostDB, error) {
+	data := &Post{
+		Title:  req.Title,
+		Desc:   req.Desc,
+		Author: req.Author,
+	}
+
+	dataRes := &Post{}
+
+	id, err := primitive.ObjectIDFromHex(req.XId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Fail to convert hex to OID: %v", err)
+	}
+
+	res := postColl.FindOneAndUpdate(
+		context.Background(),
+		bson.M{"_id": id},
+		bson.M{"$set": data},
+		options.FindOneAndUpdate().SetReturnDocument(1))
+	if err := res.Decode(dataRes); err != nil {
+		return nil, status.Errorf(codes.NotFound, "Post not found: %v", err)
+	}
+	return &pb.PostDB{
+		XId:    req.XId,
+		Title:  data.Title,
+		Desc:   data.Desc,
 		Author: data.Author,
 	}, nil
 }
