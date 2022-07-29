@@ -58,6 +58,28 @@ func (s *Server) ListPosts(nothing *pb.Void, stream pb.PostService_ListPostsServ
 	return nil
 }
 
+func (s *Server) GetPost(_ context.Context, req *pb.GetPostRequest) (*pb.PostDB, error) {
+	data := &Post{}
+	id, err := primitive.ObjectIDFromHex(req.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Fail to convert hex to OID: %v", err)
+	}
+	res := postColl.FindOne(context.Background(), bson.M{"_id": id})
+
+	if err := res.Decode(data); err != nil {
+		return nil, status.Errorf(codes.NotFound, "Post not found: %v", err)
+	}
+
+	result := &pb.PostDB{
+		XId:    data.Id.Hex(),
+		Title:  data.Title,
+		Desc:   data.Desc,
+		Votes:  data.Votes,
+		Author: data.Author,
+	}
+	return result, nil
+}
+
 var db *mongo.Client
 var postColl *mongo.Collection
 
