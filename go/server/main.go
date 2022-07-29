@@ -23,7 +23,7 @@ type Server struct {
 }
 
 type Post struct {
-	Id     primitive.ObjectID `bson:"_id, omitempty"`
+	Id     primitive.ObjectID `bson:"_id,omitempty"`
 	Title  string             `bson:"title"`
 	Desc   string             `bson:"desc"`
 	Votes  int64              `bson:"votes"`
@@ -93,6 +93,30 @@ func (s *Server) Vote(_ context.Context, req *pb.VoteRequest) (*pb.PostDB, error
 	}
 	return &pb.PostDB{
 		XId:    data.Id.Hex(),
+		Title:  data.Title,
+		Desc:   data.Desc,
+		Votes:  data.Votes,
+		Author: data.Author,
+	}, nil
+}
+
+func (s *Server) CreatePost(_ context.Context, req *pb.Post) (*pb.PostDB, error) {
+	data := &Post{
+		Title:  req.Title,
+		Desc:   req.Desc,
+		Votes:  0,
+		Author: req.Author,
+	}
+	fmt.Println(data)
+	res, err := postColl.InsertOne(context.Background(), data)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Fail to create post: %v", err)
+	}
+
+	id := res.InsertedID.(primitive.ObjectID)
+
+	return &pb.PostDB{
+		XId:    id.Hex(),
 		Title:  data.Title,
 		Desc:   data.Desc,
 		Votes:  data.Votes,
