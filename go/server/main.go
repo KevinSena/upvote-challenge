@@ -47,7 +47,7 @@ func (s *Server) ListPosts(nothing *pb.Void, stream pb.PostService_ListPostsServ
 		}
 
 		stream.Send(&pb.PostDB{
-			XId:    data.Id.String(),
+			XId:    data.Id.Hex(),
 			Title:  data.Title,
 			Desc:   data.Desc,
 			Votes:  data.Votes,
