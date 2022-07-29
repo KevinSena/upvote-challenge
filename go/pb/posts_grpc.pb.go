@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type PostServiceClient interface {
 	ListPosts(ctx context.Context, in *Void, opts ...grpc.CallOption) (PostService_ListPostsClient, error)
 	GetPost(ctx context.Context, in *GetPostRequest, opts ...grpc.CallOption) (*PostDB, error)
+	Vote(ctx context.Context, in *VoteRequest, opts ...grpc.CallOption) (*PostDB, error)
 	CreatePost(ctx context.Context, in *Post, opts ...grpc.CallOption) (*PostDB, error)
 	UpdatePost(ctx context.Context, in *PostDB, opts ...grpc.CallOption) (*PostDB, error)
 	DeletePost(ctx context.Context, in *DeletePostRequest, opts ...grpc.CallOption) (*DeletePostResponse, error)
@@ -78,6 +79,15 @@ func (c *postServiceClient) GetPost(ctx context.Context, in *GetPostRequest, opt
 	return out, nil
 }
 
+func (c *postServiceClient) Vote(ctx context.Context, in *VoteRequest, opts ...grpc.CallOption) (*PostDB, error) {
+	out := new(PostDB)
+	err := c.cc.Invoke(ctx, "/PostService/Vote", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *postServiceClient) CreatePost(ctx context.Context, in *Post, opts ...grpc.CallOption) (*PostDB, error) {
 	out := new(PostDB)
 	err := c.cc.Invoke(ctx, "/PostService/CreatePost", in, out, opts...)
@@ -111,6 +121,7 @@ func (c *postServiceClient) DeletePost(ctx context.Context, in *DeletePostReques
 type PostServiceServer interface {
 	ListPosts(*Void, PostService_ListPostsServer) error
 	GetPost(context.Context, *GetPostRequest) (*PostDB, error)
+	Vote(context.Context, *VoteRequest) (*PostDB, error)
 	CreatePost(context.Context, *Post) (*PostDB, error)
 	UpdatePost(context.Context, *PostDB) (*PostDB, error)
 	DeletePost(context.Context, *DeletePostRequest) (*DeletePostResponse, error)
@@ -126,6 +137,9 @@ func (UnimplementedPostServiceServer) ListPosts(*Void, PostService_ListPostsServ
 }
 func (UnimplementedPostServiceServer) GetPost(context.Context, *GetPostRequest) (*PostDB, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPost not implemented")
+}
+func (UnimplementedPostServiceServer) Vote(context.Context, *VoteRequest) (*PostDB, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Vote not implemented")
 }
 func (UnimplementedPostServiceServer) CreatePost(context.Context, *Post) (*PostDB, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreatePost not implemented")
@@ -184,6 +198,24 @@ func _PostService_GetPost_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PostServiceServer).GetPost(ctx, req.(*GetPostRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PostService_Vote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VoteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PostServiceServer).Vote(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/PostService/Vote",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PostServiceServer).Vote(ctx, req.(*VoteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -252,6 +284,10 @@ var PostService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPost",
 			Handler:    _PostService_GetPost_Handler,
+		},
+		{
+			MethodName: "Vote",
+			Handler:    _PostService_Vote_Handler,
 		},
 		{
 			MethodName: "CreatePost",

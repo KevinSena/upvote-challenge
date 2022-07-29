@@ -7,6 +7,8 @@ service PostService {
 
   rpc GetPost(GetPostRequest) returns (PostDB) {};
 
+  rpc Vote(VoteRequest) returns (PostDB) {};
+
   rpc CreatePost(Post) returns (PostDB) {};
 
   rpc UpdatePost(PostDB) returns (PostDB) {};
@@ -32,6 +34,10 @@ message PostDB {
 message Void { }
 
 message GetPostRequest {
+  string id = 1;
+}
+
+message VoteRequest {
   string id = 1;
 }
 
