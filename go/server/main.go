@@ -80,6 +80,26 @@ func (s *Server) GetPost(_ context.Context, req *pb.GetPostRequest) (*pb.PostDB,
 	return result, nil
 }
 
+func (s *Server) Vote(_ context.Context, req *pb.VoteRequest) (*pb.PostDB, error) {
+	data := &Post{}
+	id, err := primitive.ObjectIDFromHex(req.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Fail to convert hex to OID: %v", err)
+	}
+
+	res := postColl.FindOneAndUpdate(context.Background(), bson.M{"_id": id}, bson.M{"$inc": bson.M{"votes": 1}}, options.FindOneAndUpdate().SetReturnDocument(1))
+	if err := res.Decode(data); err != nil {
+		return nil, status.Errorf(codes.NotFound, "Post not found: %v", err)
+	}
+	return &pb.PostDB{
+		XId:    data.Id.Hex(),
+		Title:  data.Title,
+		Desc:   data.Desc,
+		Votes:  data.Votes,
+		Author: data.Author,
+	}, nil
+}
+
 var db *mongo.Client
 var postColl *mongo.Collection
 
