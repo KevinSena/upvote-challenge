@@ -158,6 +158,22 @@ func (s *Server) UpdatePost(_ context.Context, req *pb.PostDB) (*pb.PostDB, erro
 	}, nil
 }
 
+func (s *Server) DeletePost(_ context.Context, req *pb.DeletePostRequest) (*pb.DeletePostResponse, error) {
+	id, err := primitive.ObjectIDFromHex(req.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Fail to convert hex to OID: %v", err)
+	}
+
+	res, err := postColl.DeleteOne(context.Background(), bson.M{"_id": id})
+	if err != nil || res.DeletedCount == 0 {
+		return nil, status.Errorf(codes.NotFound, "Post not found on database: %v", err)
+	}
+
+	return &pb.DeletePostResponse{
+		Msg: "Success on delete post",
+	}, nil
+}
+
 var db *mongo.Client
 var postColl *mongo.Collection
 
