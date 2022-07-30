@@ -24,10 +24,10 @@ type Server struct {
 
 type Post struct {
 	Id     primitive.ObjectID `bson:"_id,omitempty"`
-	Title  string             `bson:"title"`
-	Desc   string             `bson:"desc"`
+	Title  string             `bson:"title,omitempty"`
+	Desc   string             `bson:"desc,omitempty"`
 	Votes  int64              `bson:"votes,omitempty"`
-	Author string             `bson:"author"`
+	Author string             `bson:"author,omitempty"`
 }
 
 func (s *Server) ListPosts(nothing *pb.Void, stream pb.PostService_ListPostsServer) error {
@@ -111,7 +111,6 @@ func (s *Server) CreatePost(_ context.Context, req *pb.Post) (*pb.PostDB, error)
 		Votes:  0,
 		Author: req.Author,
 	}
-	fmt.Println(data)
 	res, err := postColl.InsertOne(context.Background(), data)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Fail to create post: %v", err)
