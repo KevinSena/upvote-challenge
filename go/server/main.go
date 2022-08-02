@@ -24,6 +24,14 @@ type Server struct {
 
 type Post struct {
 	Id     primitive.ObjectID `bson:"_id,omitempty"`
+	Title  string             `bson:"title"`
+	Desc   string             `bson:"desc"`
+	Votes  int64              `bson:"votes,omitempty"`
+	Author string             `bson:"author"`
+}
+
+type PostUpdate struct {
+	Id     primitive.ObjectID `bson:"_id,omitempty"`
 	Title  string             `bson:"title,omitempty"`
 	Desc   string             `bson:"desc,omitempty"`
 	Votes  int64              `bson:"votes,omitempty"`
@@ -58,13 +66,13 @@ func (s *Server) ListPosts(nothing *pb.Void, stream pb.PostService_ListPostsServ
 	return nil
 }
 
-func (s *Server) GetPost(_ context.Context, req *pb.GetPostRequest) (*pb.PostDB, error) {
+func (s *Server) GetPost(ctx context.Context, req *pb.GetPostRequest) (*pb.PostDB, error) {
 	data := &Post{}
 	id, err := primitive.ObjectIDFromHex(req.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "Fail to convert hex to OID: %v", err)
 	}
-	res := postColl.FindOne(context.Background(), bson.M{"_id": id})
+	res := postColl.FindOne(ctx, bson.M{"_id": id})
 
 	if err := res.Decode(data); err != nil {
 		return nil, status.Errorf(codes.NotFound, "Post not found: %v", err)
@@ -80,7 +88,7 @@ func (s *Server) GetPost(_ context.Context, req *pb.GetPostRequest) (*pb.PostDB,
 	return result, nil
 }
 
-func (s *Server) Vote(_ context.Context, req *pb.VoteRequest) (*pb.PostDB, error) {
+func (s *Server) Vote(ctx context.Context, req *pb.VoteRequest) (*pb.PostDB, error) {
 	data := &Post{}
 	id, err := primitive.ObjectIDFromHex(req.Id)
 	if err != nil {
@@ -88,7 +96,7 @@ func (s *Server) Vote(_ context.Context, req *pb.VoteRequest) (*pb.PostDB, error
 	}
 
 	res := postColl.FindOneAndUpdate(
-		context.Background(),
+		ctx,
 		bson.M{"_id": id},
 		bson.M{"$inc": bson.M{"votes": 1}},
 		options.FindOneAndUpdate().SetReturnDocument(1))
@@ -104,14 +112,23 @@ func (s *Server) Vote(_ context.Context, req *pb.VoteRequest) (*pb.PostDB, error
 	}, nil
 }
 
-func (s *Server) CreatePost(_ context.Context, req *pb.Post) (*pb.PostDB, error) {
+func (s *Server) CreatePost(ctx context.Context, req *pb.Post) (*pb.PostDB, error) {
+	if req.Title == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "Title couldnt be empty")
+	}
+	if req.Desc == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "Description couldnt be empty")
+	}
+	if req.Author == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "Author couldnt be empty")
+	}
 	data := &Post{
 		Title:  req.Title,
 		Desc:   req.Desc,
 		Votes:  0,
 		Author: req.Author,
 	}
-	res, err := postColl.InsertOne(context.Background(), data)
+	res, err := postColl.InsertOne(ctx, data)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Fail to create post: %v", err)
 	}
@@ -127,8 +144,8 @@ func (s *Server) CreatePost(_ context.Context, req *pb.Post) (*pb.PostDB, error)
 	}, nil
 }
 
-func (s *Server) UpdatePost(_ context.Context, req *pb.PostDB) (*pb.PostDB, error) {
-	data := &Post{
+func (s *Server) UpdatePost(ctx context.Context, req *pb.PostDB) (*pb.PostDB, error) {
+	data := &PostUpdate{
 		Title:  req.Title,
 		Desc:   req.Desc,
 		Author: req.Author,
@@ -142,7 +159,7 @@ func (s *Server) UpdatePost(_ context.Context, req *pb.PostDB) (*pb.PostDB, erro
 	}
 
 	res := postColl.FindOneAndUpdate(
-		context.Background(),
+		ctx,
 		bson.M{"_id": id},
 		bson.M{"$set": data},
 		options.FindOneAndUpdate().SetReturnDocument(1))
@@ -157,13 +174,13 @@ func (s *Server) UpdatePost(_ context.Context, req *pb.PostDB) (*pb.PostDB, erro
 	}, nil
 }
 
-func (s *Server) DeletePost(_ context.Context, req *pb.DeletePostRequest) (*pb.DeletePostResponse, error) {
+func (s *Server) DeletePost(ctx context.Context, req *pb.DeletePostRequest) (*pb.DeletePostResponse, error) {
 	id, err := primitive.ObjectIDFromHex(req.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "Fail to convert hex to OID: %v", err)
 	}
 
-	res, err := postColl.DeleteOne(context.Background(), bson.M{"_id": id})
+	res, err := postColl.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil || res.DeletedCount == 0 {
 		return nil, status.Errorf(codes.NotFound, "Post not found on database: %v", err)
 	}
