@@ -195,14 +195,14 @@ var postColl *mongo.Collection
 var mongoCtx context.Context
 
 func main() {
-	port := ":3001"
+	port := ":" + os.Getenv("PORT")
 	listener, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("Fail to listen: %v", err)
 	}
 
 	mongoCtx = context.Background()
-	uri := "mongodb://localhost:27017/"
+	uri := fmt.Sprintf("mongodb://%v:%v", os.Getenv("MONGO_HOST"), os.Getenv("MONGO_PORT"))
 	db, err = mongo.Connect(mongoCtx, options.Client().ApplyURI(uri))
 	if err != nil {
 		log.Panic(err)
@@ -218,7 +218,7 @@ func main() {
 		}
 	}()
 
-	fmt.Printf("Server succesfully started on port %v\n", port)
+	fmt.Printf("Server succesfully started on port :%v\n", port)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)

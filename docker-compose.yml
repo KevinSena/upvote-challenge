@@ -13,20 +13,19 @@ services:
       - 27017:27017
     networks:
       - upvote_net
-  # server:
-  #   build: ./server
-  #   container_name: go_server
-  #   ports:
-  #     - 3001:3001
-  #   depends_on:
-  #     - mongodb
-  #   environment:
-  #     - PORT=3001
-  #     - HOST=localhost
-  #     - MONGO_URI=mongodb
-  #     - MONGO_PORT=27017
-  #   networks:
-  #     - upvote_net
+  server:
+    build: ./go
+    container_name: go_server
+    ports:
+      - 3001:3001
+    depends_on:
+      - mongodb
+    environment:
+      - PORT=3001
+      - MONGO_HOST=posts_db
+      - MONGO_PORT=27017
+    networks:
+      - upvote_net
 
 networks:
   upvote_net:
