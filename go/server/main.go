@@ -192,6 +192,7 @@ func (s *Server) DeletePost(ctx context.Context, req *pb.DeletePostRequest) (*pb
 
 var db *mongo.Client
 var postColl *mongo.Collection
+var mongoCtx context.Context
 
 func main() {
 	port := ":3001"
@@ -200,8 +201,9 @@ func main() {
 		log.Fatalf("Fail to listen: %v", err)
 	}
 
+	mongoCtx = context.Background()
 	uri := "mongodb://localhost:27017/"
-	db, err = mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
+	db, err = mongo.Connect(mongoCtx, options.Client().ApplyURI(uri))
 	if err != nil {
 		log.Panic(err)
 	}
@@ -216,7 +218,7 @@ func main() {
 		}
 	}()
 
-	fmt.Printf("Server succesfully started on port %v", port)
+	fmt.Printf("Server succesfully started on port %v\n", port)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
@@ -226,5 +228,5 @@ func main() {
 	grpcServer.Stop()
 	listener.Close()
 	db.Disconnect(context.Background())
-	fmt.Println("\nDone")
+	fmt.Println("Done")
 }
