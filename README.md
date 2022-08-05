@@ -19,7 +19,7 @@ Extra:
 
 ## Used stacks
 
-> MongoDB, Golang, gRPC
+> MongoDB, Golang, gRPC, Cobra, Docker, protobuf
 
 ## Dependencies
 
@@ -27,28 +27,21 @@ Extra:
 - docker
 - docker-compose
 
-## Running database
+## Running database and Server
 
 ```
 docker-compose up -d
 ```
 
-## Running Server
-
-```
-cd go/
-go run server/main.go
-```
-
 ## Running Client
 
 ```
-cd go/
-go run client/main.go [command]
+docker-compose run client
+/client [command]
 ```
 
 ## Running Tests
-
+:warning: **Tests just works if the server and db is running up**
   ```
   cd go/server/
   go test -v
