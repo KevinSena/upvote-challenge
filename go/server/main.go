@@ -26,7 +26,7 @@ type Post struct {
 	Id     primitive.ObjectID `bson:"_id,omitempty"`
 	Title  string             `bson:"title"`
 	Desc   string             `bson:"desc"`
-	Votes  int64              `bson:"votes,omitempty"`
+	Votes  int64              `bson:"votes"`
 	Author string             `bson:"author"`
 }
 
