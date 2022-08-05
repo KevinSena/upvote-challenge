@@ -5,6 +5,8 @@ services:
     image: mongo
     container_name: posts_db
     environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=root
       - MONGO_INITDB_DATABASE=upvote
     volumes:
       - "./db/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro"
@@ -23,6 +25,8 @@ services:
     environment:
       - PORT=3001
       - MONGO_HOST=posts_db
+      - MONGO_USER=root
+      - MONGO_PASS=root
       - MONGO_PORT=27017
     networks:
       - upvote_net

@@ -27,7 +27,7 @@ func init() {
 	}
 	connection = pb.NewPostServiceClient(conn)
 
-	uri := "mongodb://localhost:27017/"
+	uri := "mongodb://root:root@localhost:27017/"
 	mongoCtx = context.Background()
 	db, err := mongo.Connect(mongoCtx, options.Client().ApplyURI(uri))
 	if err != nil {

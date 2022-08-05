@@ -193,6 +193,7 @@ func (s *Server) DeletePost(ctx context.Context, req *pb.DeletePostRequest) (*pb
 var db *mongo.Client
 var postColl *mongo.Collection
 var mongoCtx context.Context
+var uri string
 
 func main() {
 	port := ":" + os.Getenv("PORT")
@@ -202,7 +203,17 @@ func main() {
 	}
 
 	mongoCtx = context.Background()
-	uri := fmt.Sprintf("mongodb://%v:%v", os.Getenv("MONGO_HOST"), os.Getenv("MONGO_PORT"))
+	if os.Getenv("MONGO_URI") == "" {
+		uri = fmt.Sprintf(
+			"mongodb://%v:%v@%v:%v",
+			os.Getenv("MONGO_USER"),
+			os.Getenv("MONGO_PASS"),
+			os.Getenv("MONGO_HOST"),
+			os.Getenv("MONGO_PORT"))
+	} else {
+		uri = os.Getenv("MONGO_URI")
+	}
+
 	db, err = mongo.Connect(mongoCtx, options.Client().ApplyURI(uri))
 	if err != nil {
 		log.Panic(err)
