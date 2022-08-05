@@ -26,6 +26,19 @@ services:
       - MONGO_PORT=27017
     networks:
       - upvote_net
+  client:
+    build: ./client
+    container_name: cli_client
+    depends_on:
+      - mongodb
+      - server
+    environment:
+      - SERVER_HOST=go_server
+      - SERVER_PORT=3001
+    profiles:
+      - cli
+    networks:
+      - upvote_net
 
 networks:
   upvote_net:
